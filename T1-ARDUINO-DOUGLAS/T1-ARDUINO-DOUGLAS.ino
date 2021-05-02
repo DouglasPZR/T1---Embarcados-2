@@ -1,13 +1,35 @@
 
 
+
 //------------------------------------------------------------------------------------------ BIBLIOTECAS
 #include <LiquidCrystal.h>
 #include <SHT1X.h>
 
 
 //------------------------------------------------------------------------------------------ PINOS e INICIALIZAÇÕES
-const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+//--------------------------------------------------------  DEFS DISPLAY
+#define rs 12
+#define en 11
+#define d4 5
+#define d5 4
+#define d6 3
+#define d7 2
+//--------------------------------------------------------  DEFS LEDS
+#define LED1 6
+#define LED2 7
+#define LED3 8
+#define LED4 9
+//--------------------------------------------------------  DEFS CHAVES
+#define CH1 A0
+#define CH2 A1
+#define CH3 A2
+#define CH4 A3
+
+
+
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+
 
 //------------------------------------------------------------------------------------------ UNION 32 bits em 4 dados de 8 bits
 typedef union{                    // union serve para separar um dado de 32bits em 4 dados de 8 bits, ajuda na transmissao de float
@@ -19,7 +41,7 @@ typedef union{                    // union serve para separar um dado de 32bits 
   }parcial;
 float total;
 }INTEIRO;
-INTEIRO dado16;   // dado16 é variavel union com os dados, dado16.total é o float inteiro, dado16.parcial é as partes
+INTEIRO dado16, TEMP16, UMI16;   // dado16 é variavel union com os dados, dado16.total é o float inteiro, dado16.parcial é as partes
 
 
 //------------------------------------------------------------------------------------------ CALCULO CRC
@@ -80,6 +102,21 @@ unsigned short CRC16 (unsigned char *puchMsg, unsigned short usDataLen){        
   return (uchCRCLo << 8 | uchCRCHi);
 }
 
+
+//------------------------------------------------------------------------------------------ FUNÇÃO ACIONA LEDS
+void ACIONA_LEDS (uint8_t comando_LEDS){
+  if (comando_LEDS & (1<<0)) digitalWrite(LED1, HIGH);
+  else digitalWrite(LED1, LOW);
+  if (comando_LEDS & (1<<1)) digitalWrite(LED2, HIGH);
+  else digitalWrite(LED2, LOW);
+  if (comando_LEDS & (1<<2)) digitalWrite(LED3, HIGH);
+  else digitalWrite(LED3, LOW);
+  if (comando_LEDS & (1<<3)) digitalWrite(LED4, HIGH);
+  else digitalWrite(LED4, LOW);
+}
+
+
+
 //------------------------------------------------------------------------------------------ FUNÇÃO MODBUS
 void modbus(uint8_t dado){
   static int estado = 0;
@@ -101,9 +138,11 @@ void modbus(uint8_t dado){
      break;
 //---------- verifica função   
     case 1:                         
-      if (dado == 0x10) estado = 2;        // numero da função modbus
+      if (dado == 0x10) estado = 2;        // numero da função modbus; 2 = função ler flaot
+      else if (dado == 0x0F) estado = 13;   // numero da função LEDS
       else estado =0;
     break;
+//------------------------------------------------------- FUNÇÃO FLOAT + DISPLAY
 //---------- verifica endereço inicial alto
     case 2:                         
       if (dado == 0x00) estado = 3;        // parte alta do endereço é sempre zero
@@ -175,20 +214,93 @@ void modbus(uint8_t dado){
       vetor_resposta_modbus [7] = (crc16_calculado)& 0xff;        // crc baixo
 
       Serial.write(vetor_resposta_modbus,8);                      // envia a resposta
-
-      
     break;
-    
+
+
+
+//------------------------------------------------------- FUNÇÃO ACIONA LEDS
+
+//----------------- ESTRUTURA DADOS MODBUS FUNÇÃO 0x0F MASTER -> SLAVE
+//
+//  ENDEREÇO |  FUNÇAO |                                   DADOS                  |         CRC
+//           |         |  END INICIAL |   Nº ESTADOS   | Nº Bytes | BYTE1 | BYTE2 | CRC ALTO  | CRC BAIXO
+//   0x11    |  0x0F   |      0x00    |  0x00  |  0x2D |   0x02   | 0x00  | 0x0A  | BYTE ALTO | BYTE BAIXO
+//---------- verifica endereço inicial alto
+    case 13:                         
+      if (dado == 0x00) estado = 14;        // parte alta do endereço é sempre zero
+      else estado =0;
+    break;
+//---------- verifica endereço inicial baixo
+    case 14:                         
+      if (dado == 0x01) estado = 15;        // parte alta do endereço é sempre zero
+      else estado =0;
+    break;
+//---------- verifica numero de estados alto
+    case 15:                                // estados parte alta é zero
+      if (dado == 0x00) estado = 16;        // para transmitir um numero em ponto flutuante são necessarios 4 bytes, entao sao necessarios 2 estados, 2 bytes por estado
+      else estado =0;
+    break;
+//---------- verifica numero de estados baixa
+    case 16:                         
+      if (dado == 0x04) estado = 17;        // 1 estados para transmitir 4 bytes
+      else estado =0;
+    break;
+//---------- numero de bytes
+    case 17:                         
+      if (dado == 0x01) estado = 18;        // numero de bytes a ser recebido - neste caso 1 bytes
+      else estado =0;
+    break;
+//---------- recebe primeiro byte de dados
+    case 18:                         
+      ACIONA_LEDS(dado);
+      estado = 19;
+    break;
+//---------- recebe CRC ALTO
+    case 19:                         
+      crc_alto = dado;          // recebe crc alto
+      estado = 20;
+    break;
+//---------- recebe CRC BAIXO
+    case 20:                         
+      crc_baixo = dado;          // recebe crc baixo
+      estado = 0;                // reset da maquina de estados
+//resposta modbus p/ slave
+      vetor_resposta_modbus [0] = 0x01;   // endereço
+      vetor_resposta_modbus [1] = 0x0F;   // função modbus
+      vetor_resposta_modbus [2] = 0x00;   // endereço alto
+      vetor_resposta_modbus [3] = 0x01;   // endereço baixo
+      vetor_resposta_modbus [4] = 0x00;   // numero de estados alto
+      vetor_resposta_modbus [5] = 0x04;   // numero de estados baixo
+      crc16_calculado = CRC16(vetor_resposta_modbus, 6);          // calcula crc do conteudo da resposta com 6 bytes
+      vetor_resposta_modbus [6] = (crc16_calculado >>8 )& 0xff;   // crc alto
+      vetor_resposta_modbus [7] = (crc16_calculado)& 0xff;        // crc baixo
+
+      Serial.write(vetor_resposta_modbus,8);                      // envia a resposta
+    break;
+
   } 
 }
 
 
 //------------------------------------------------------------------------------------------ SETUP
 void setup() {
+//--------------------------------------------------------  LCD INIT
   lcd.begin(16, 2);
   lcd.print("hello, world!");
-  
+//--------------------------------------------------------  SERIAL INIT
   Serial.begin(9600);
+//--------------------------------------------------------  I/O's INIT
+  pinMode (LED1, OUTPUT);
+  pinMode (LED2, OUTPUT);
+  pinMode (LED3, OUTPUT);
+  pinMode (LED4, OUTPUT);
+  pinMode (CH1, INPUT);
+  pinMode (CH2, INPUT);
+  pinMode (CH3, INPUT);
+  pinMode (CH4, INPUT);
+//--------------------------------------------------------  INIT temp+umi com valor
+  TEMP16.total = 25.27;
+  UMI16.total = 67.37;
 
 }
 
@@ -197,6 +309,25 @@ void setup() {
 //------------------------------------------------------------------------------------------ LOOP
 void loop() {
   uint8_t dadoRX;
+  int res_chaves = 0;
+  char msg_ch [20];
+
+//  digitalWrite(LED1, !digitalRead(LED1));
+//  digitalWrite(LED2, !digitalRead(LED2));
+//  digitalWrite(LED3, !digitalRead(LED3));
+//  digitalWrite(LED4, !digitalRead(LED4));
+//  delay(500);
+
+  if(digitalRead(CH1) != HIGH) res_chaves = res_chaves + 2;
+  if(digitalRead(CH2) != HIGH) res_chaves = res_chaves + 4;
+  if(digitalRead(CH3) != HIGH) res_chaves = res_chaves + 8;
+  if(digitalRead(CH4) != HIGH) res_chaves = res_chaves + 16;
+
+//  sprintf(msg_ch, "%2d", res_chaves);
+//  lcd.setCursor(0,1);
+//  lcd.print (msg_ch);
+
+  res_chaves = 0;
 
   if (Serial.available() > 0) {
     dadoRX = Serial.read();
