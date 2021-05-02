@@ -123,13 +123,6 @@ void modbus(uint8_t dado){
   uint8_t crc_baixo, crc_alto, vetor_resposta_modbus [30];
   uint16_t  crc16_calculado;
   
-//----------------- ESTRUTURA DADOS MODBUS FUNÇÃO 0x10 MASTER -> SLAVE
-//
-//  ENDEREÇO |  FUNÇAO |                                   DADOS                  |         CRC
-//           |         |  END INICIAL |   Nº ESTADOS   | Nº Bytes | BYTE1 | BYTE2 | CRC ALTO  | CRC BAIXO
-//   0x11    |  0x10   |      0x01    |  0x00  |  0x2D |   0x02   | 0x00  | 0x0A  | BYTE ALTO | BYTE BAIXO
-
-
   switch (estado){
 //---------- verifica endereços   
     case 0:                               
@@ -138,11 +131,21 @@ void modbus(uint8_t dado){
      break;
 //---------- verifica função   
     case 1:                         
-      if (dado == 0x10) estado = 2;        // numero da função modbus; 2 = função ler flaot
-      else if (dado == 0x0F) estado = 13;   // numero da função LEDS
+      if (dado == 0x10) estado = 2;        // numero da função modbus; 2~12 = função ler flaot
+      else if (dado == 0x0F) estado = 13;   // numero da função LEDS 13~20
+      else if (dado == 0x02) estado = 21;   // numero da função CHAVES 21~26
       else estado =0;
     break;
+
+
 //------------------------------------------------------- FUNÇÃO FLOAT + DISPLAY
+
+//----------------- ESTRUTURA DADOS MODBUS FUNÇÃO 0x10 MASTER -> SLAVE
+//
+//  ENDEREÇO |  FUNÇAO |                                   DADOS                  |         CRC
+//           |         |  END INICIAL |   Nº ESTADOS   | Nº Bytes | BYTE1 | BYTE2 | CRC ALTO  | CRC BAIXO
+//   0x11    |  0x10   |      0x01    |  0x00  |  0x2D |   0x02   | 0x00  | 0x0A  | BYTE ALTO | BYTE BAIXO
+
 //---------- verifica endereço inicial alto
     case 2:                         
       if (dado == 0x00) estado = 3;        // parte alta do endereço é sempre zero
@@ -278,6 +281,54 @@ void modbus(uint8_t dado){
       Serial.write(vetor_resposta_modbus,8);                      // envia a resposta
     break;
 
+
+//------------------------------------------------------- FUNÇÃO LEITURA DAS CHAVES
+
+//----------------- ESTRUTURA DADOS MODBUS FUNÇÃO 0x02 MASTER -> SLAVE
+//
+//  ENDEREÇO |  FUNÇAO |                DADOS          |          CRC
+//           |         |  END INICIAL |   Nº ESTADOS   | CRC ALTO  | CRC BAIXO
+//   0x11    |  0x02   |      0x00    |  0x00  |  0x0D | BYTE ALTO | BYTE BAIXO
+//---------- verifica endereço inicial alto
+    case 21:                         
+      if (dado == 0x00) estado = 22;        // parte alta do endereço é sempre zero
+      else estado =0;
+    break;
+//---------- verifica endereço inicial baixo
+    case 22:                         
+      if (dado == 0x02) estado = 23;        // parte alta do endereço é sempre zero
+      else estado =0;
+    break;
+//---------- verifica numero de estados alto
+    case 23:                                // estados parte alta é zero
+      if (dado == 0x00) estado = 24;        // para transmitir um numero em ponto flutuante são necessarios 4 bytes, entao sao necessarios 2 estados, 2 bytes por estado
+      else estado =0;
+    break;
+//---------- verifica numero de estados baixa
+    case 24:                         
+      if (dado == 0x04) estado = 25;        // 1 estados para transmitir 4 bytes
+      else estado =0;
+    break;
+//---------- recebe CRC ALTO
+    case 25:                         
+      crc_alto = dado;          // recebe crc alto
+      estado = 26;
+    break;
+//---------- recebe CRC BAIXO
+    case 26:                         
+      crc_baixo = dado;          // recebe crc baixo
+      estado = 0;                // reset da maquina de estados
+//resposta modbus p/ slave
+      vetor_resposta_modbus [0] = 0x01;   // endereço
+      vetor_resposta_modbus [1] = 0x02;   // função modbus
+      vetor_resposta_modbus [2] = 0x01;   // endereço alto
+      vetor_resposta_modbus [3] = ((digitalRead(CH4) << 3) |(digitalRead(CH3) << 2) | (digitalRead(CH2) << 1) | (digitalRead(CH1) << 0));
+      crc16_calculado = CRC16(vetor_resposta_modbus, 4);          // calcula crc do conteudo da resposta com 6 bytes
+      vetor_resposta_modbus [4] = (crc16_calculado >>8 )& 0xff;   // crc alto
+      vetor_resposta_modbus [5] = (crc16_calculado)& 0xff;        // crc baixo
+
+      Serial.write(vetor_resposta_modbus,6);                      // envia a resposta
+    break;
   } 
 }
 
