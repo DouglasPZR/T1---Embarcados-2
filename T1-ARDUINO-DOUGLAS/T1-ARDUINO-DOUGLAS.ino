@@ -120,6 +120,7 @@ void ACIONA_LEDS (uint8_t comando_LEDS){
 //------------------------------------------------------------------------------------------ FUNÇÃO MODBUS
 void modbus(uint8_t dado){
   static int estado = 0;
+  static char msg_recebida [8];
   uint8_t crc_baixo, crc_alto, vetor_resposta_modbus [30];
   uint16_t  crc16_calculado;
   
@@ -154,6 +155,7 @@ void modbus(uint8_t dado){
 //---------- verifica endereço inicial baixo
     case 3:                         
       if (dado == 0x06) estado = 4;        // endereço do periférico ponto flutuante segundo o trabalho 1 - end 0x06
+      else if (dado == 0x00) estado = 27;  // numero função escreve caracteres no display 27~
       else estado =0;
     break;
 //---------- verifica numero de estados alto
@@ -329,6 +331,98 @@ void modbus(uint8_t dado){
 
       Serial.write(vetor_resposta_modbus,6);                      // envia a resposta
     break;
+
+
+//------------------------------------------------------- FUNÇÃO ESCREVE NO DISPLAY
+//---------- verifica numero de estados alto
+    case 27:                                // estados parte alta é zero
+      if (dado == 0x00) estado = 28;        // para transmitir um numero em ponto flutuante são necessarios 4 bytes, entao sao necessarios 2 estados, 2 bytes por estado
+      else estado =0;
+    break;
+//---------- verifica numero de estados baixa
+    case 28:                         
+      if (dado == 0x08) estado = 29;        // 2 estados para transmitir 4 bytes
+      else estado =0;
+    break;
+//---------- numero de bytes
+    case 29:                         
+      if (dado == 0x10) estado = 30;        // numero de bytes a ser recebido - neste caso 4 bytes
+      else estado =0;
+    break;
+//---------- recebe segundo byte de dados
+    case 30:                         
+      msg_recebida[0] =toascii (dado);          // recebe segundo dado 4 bytes e salva no parcial low
+      estado = 31;
+    break;
+//---------- recebe terceiro byte de dados
+    case 31:                         
+      msg_recebida[1] = dado;              // recebe terceiro dado 4 bytes e salva no parcial low
+      estado = 32;
+    break;
+//---------- recebe terceiro byte de dados
+    case 32:                         
+      msg_recebida[2] =toascii( dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      estado = 33;
+    break;
+//---------- recebe terceiro byte de dados
+    case 33:                         
+      msg_recebida[3] =toascii( dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      estado = 34;
+    break;
+//---------- recebe terceiro byte de dados
+    case 34:                         
+      msg_recebida[4] = toascii (dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      estado = 35;
+    break;
+//---------- recebe terceiro byte de dados
+    case 35:                         
+      msg_recebida[5] =toascii( dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      estado = 36;
+    break;
+//---------- recebe terceiro byte de dados
+    case 36:                         
+      msg_recebida[6] = toascii(dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      estado = 37;
+    break;
+//---------- recebe terceiro byte de dados
+    case 37:                         
+      msg_recebida[7] = toascii(dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      lcd.setCursor(0,0);
+      lcd.print(msg_recebida[0]);
+      lcd.print(msg_recebida[1]);
+      lcd.print(msg_recebida[2]);
+      lcd.print(msg_recebida[3]);
+      lcd.print(msg_recebida[4]);
+      lcd.print(msg_recebida[5]);
+      lcd.print(msg_recebida[6]);
+      lcd.print(msg_recebida[7]);
+      estado = 38;
+    break;
+//---------- recebe CRC ALTO
+    case 38:                         
+      crc_alto = dado;          // recebe crc alto
+      estado = 39;
+    break;
+//---------- recebe CRC BAIXO
+    case 39:                         
+      crc_baixo = dado;          // recebe crc baixo
+      estado = 0;                // reset da maquina de estados
+//resposta modbus p/ slave
+      vetor_resposta_modbus [0] = 0x01;   // endereço
+      vetor_resposta_modbus [1] = 0x10;   // função modbus
+      vetor_resposta_modbus [2] = 0x00;   // endereço alto
+      vetor_resposta_modbus [3] = 0x00;   // endereço baixo
+      vetor_resposta_modbus [4] = 0x00;   // numero de estados alto
+      vetor_resposta_modbus [5] = 0x08;   // numero de estados baixo
+      crc16_calculado = CRC16(vetor_resposta_modbus, 6);          // calcula crc do conteudo da resposta com 6 bytes
+      vetor_resposta_modbus [6] = (crc16_calculado >>8 )& 0xff;   // crc alto
+      vetor_resposta_modbus [7] = (crc16_calculado)& 0xff;        // crc baixo
+
+      Serial.write(vetor_resposta_modbus,8);                      // envia a resposta
+    break;
+
+
+    
   } 
 }
 
@@ -337,7 +431,7 @@ void modbus(uint8_t dado){
 void setup() {
 //--------------------------------------------------------  LCD INIT
   lcd.begin(16, 2);
-  lcd.print("hello, world!");
+  lcd.print("teste");
 //--------------------------------------------------------  SERIAL INIT
   Serial.begin(9600);
 //--------------------------------------------------------  I/O's INIT
@@ -363,22 +457,6 @@ void loop() {
   int res_chaves = 0;
   char msg_ch [20];
 
-//  digitalWrite(LED1, !digitalRead(LED1));
-//  digitalWrite(LED2, !digitalRead(LED2));
-//  digitalWrite(LED3, !digitalRead(LED3));
-//  digitalWrite(LED4, !digitalRead(LED4));
-//  delay(500);
-
-  if(digitalRead(CH1) != HIGH) res_chaves = res_chaves + 2;
-  if(digitalRead(CH2) != HIGH) res_chaves = res_chaves + 4;
-  if(digitalRead(CH3) != HIGH) res_chaves = res_chaves + 8;
-  if(digitalRead(CH4) != HIGH) res_chaves = res_chaves + 16;
-
-//  sprintf(msg_ch, "%2d", res_chaves);
-//  lcd.setCursor(0,1);
-//  lcd.print (msg_ch);
-
-  res_chaves = 0;
 
   if (Serial.available() > 0) {
     dadoRX = Serial.read();
