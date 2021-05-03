@@ -3,6 +3,7 @@
 
 //------------------------------------------------------------------------------------------ BIBLIOTECAS
 #include <LiquidCrystal.h>
+#include <DHT.h>
 #include <SHT1X.h>
 
 
@@ -24,10 +25,13 @@
 #define CH2 A1
 #define CH3 A2
 #define CH4 A3
-
+//--------------------------------------------------------  DEFS DHT11
+#define DHTTYPE DHT11   // DHT 11
+#define DHTPIN 10     
 
 
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+DHT dht(DHTPIN, DHTTYPE);
 
 
 
@@ -42,6 +46,21 @@ typedef union{                    // union serve para separar um dado de 32bits 
 float total;
 }INTEIRO;
 INTEIRO dado16, TEMP16, UMI16;   // dado16 é variavel union com os dados, dado16.total é o float inteiro, dado16.parcial é as partes
+
+
+//--------------------------------------------------- LEITURA DHT11
+void LEITURA_DHT11(void){
+  TEMP16.total = dht.readTemperature();
+  UMI16.total = dht.readHumidity();
+  Serial.print("Temp:  ");
+  Serial.print((int)TEMP16.total);
+  Serial.println("oC");
+  Serial.print("UMI:  ");
+  Serial.print((int)UMI16.total);
+  Serial.println("%");
+}
+
+
 
 
 //------------------------------------------------------------------------------------------ CALCULO CRC
@@ -120,7 +139,7 @@ void ACIONA_LEDS (uint8_t comando_LEDS){
 //------------------------------------------------------------------------------------------ FUNÇÃO MODBUS
 void modbus(uint8_t dado){
   static int estado = 0;
-  static char msg_recebida [8];
+  static char msg_recebida [16];
   uint8_t crc_baixo, crc_alto, vetor_resposta_modbus [30];
   uint16_t  crc16_calculado;
   
@@ -135,6 +154,7 @@ void modbus(uint8_t dado){
       if (dado == 0x10) estado = 2;        // numero da função modbus; 2~12 = função ler flaot
       else if (dado == 0x0F) estado = 13;   // numero da função LEDS 13~20
       else if (dado == 0x02) estado = 21;   // numero da função CHAVES 21~26
+      else if (dado == 0x03) estado = 40;   // numero da função DHT11 40~
       else estado =0;
     break;
 
@@ -155,7 +175,7 @@ void modbus(uint8_t dado){
 //---------- verifica endereço inicial baixo
     case 3:                         
       if (dado == 0x06) estado = 4;        // endereço do periférico ponto flutuante segundo o trabalho 1 - end 0x06
-      else if (dado == 0x00) estado = 27;  // numero função escreve caracteres no display 27~
+      else if (dado == 0x00) estado = 27;  // numero função escreve caracteres no display 27~ 39
       else estado =0;
     break;
 //---------- verifica numero de estados alto
@@ -351,7 +371,7 @@ void modbus(uint8_t dado){
     break;
 //---------- recebe segundo byte de dados
     case 30:                         
-      msg_recebida[0] =toascii (dado);          // recebe segundo dado 4 bytes e salva no parcial low
+      msg_recebida[0] = (dado);          // recebe segundo dado 4 bytes e salva no parcial low
       estado = 31;
     break;
 //---------- recebe terceiro byte de dados
@@ -361,41 +381,41 @@ void modbus(uint8_t dado){
     break;
 //---------- recebe terceiro byte de dados
     case 32:                         
-      msg_recebida[2] =toascii( dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      msg_recebida[2] =( dado);              // recebe terceiro dado 4 bytes e salva no parcial low
       estado = 33;
     break;
 //---------- recebe terceiro byte de dados
     case 33:                         
-      msg_recebida[3] =toascii( dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      msg_recebida[3] =( dado);              // recebe terceiro dado 4 bytes e salva no parcial low
       estado = 34;
     break;
 //---------- recebe terceiro byte de dados
     case 34:                         
-      msg_recebida[4] = toascii (dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      msg_recebida[4] =  (dado);              // recebe terceiro dado 4 bytes e salva no parcial low
       estado = 35;
     break;
 //---------- recebe terceiro byte de dados
     case 35:                         
-      msg_recebida[5] =toascii( dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      msg_recebida[5] =( dado);              // recebe terceiro dado 4 bytes e salva no parcial low
       estado = 36;
     break;
 //---------- recebe terceiro byte de dados
     case 36:                         
-      msg_recebida[6] = toascii(dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      msg_recebida[6] = (dado);              // recebe terceiro dado 4 bytes e salva no parcial low
       estado = 37;
     break;
 //---------- recebe terceiro byte de dados
     case 37:                         
-      msg_recebida[7] = toascii(dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      msg_recebida[7] = dado;              // recebe terceiro dado 4 bytes e salva no parcial low
       lcd.setCursor(0,0);
-      lcd.print(msg_recebida[0]);
-      lcd.print(msg_recebida[1]);
-      lcd.print(msg_recebida[2]);
-      lcd.print(msg_recebida[3]);
-      lcd.print(msg_recebida[4]);
-      lcd.print(msg_recebida[5]);
-      lcd.print(msg_recebida[6]);
-      lcd.print(msg_recebida[7]);
+      lcd.print(msg_recebida);
+//      lcd.print(msg_recebida[1]);
+//      lcd.print(msg_recebida[2]);
+//      lcd.print(msg_recebida[3]);
+//      lcd.print(msg_recebida[4]);
+//      lcd.print(msg_recebida[5]);
+//      lcd.print(msg_recebida[6]);
+//      lcd.print(msg_recebida[7]);
       estado = 38;
     break;
 //---------- recebe CRC ALTO
@@ -413,7 +433,7 @@ void modbus(uint8_t dado){
       vetor_resposta_modbus [2] = 0x00;   // endereço alto
       vetor_resposta_modbus [3] = 0x00;   // endereço baixo
       vetor_resposta_modbus [4] = 0x00;   // numero de estados alto
-      vetor_resposta_modbus [5] = 0x08;   // numero de estados baixo
+      vetor_resposta_modbus [5] = 0x0F;   // numero de estados baixo
       crc16_calculado = CRC16(vetor_resposta_modbus, 6);          // calcula crc do conteudo da resposta com 6 bytes
       vetor_resposta_modbus [6] = (crc16_calculado >>8 )& 0xff;   // crc alto
       vetor_resposta_modbus [7] = (crc16_calculado)& 0xff;        // crc baixo
@@ -421,6 +441,92 @@ void modbus(uint8_t dado){
       Serial.write(vetor_resposta_modbus,8);                      // envia a resposta
     break;
 
+//------------------------------------------------------- FUNÇÃO DHT11
+//---------- verifica endereço inicial alto
+    case 40:                         
+      if (dado == 0x00) estado = 41;        // parte alta do endereço é sempre zero
+      else estado =0;
+    break;
+//---------- verifica endereço inicial baixo
+    case 41:                         
+      if (dado == 0x04) estado = 42;        // leitura temperatura
+      else if (dado == 0x05) estado = 46;   // leitura umidade
+      else estado =0;
+    break;
+//---------- verifica numero de estados alto
+    case 42:                                // estados parte alta é zero
+      if (dado == 0x00) estado = 43;        // para transmitir um numero em ponto flutuante são necessarios 4 bytes, entao sao necessarios 2 estados, 2 bytes por estado
+      else estado =0;
+    break;
+//---------- verifica numero de estados baixa
+    case 43:                         
+      if (dado == 0x03) estado = 44;        // 1 estados para transmitir 4 bytes
+      else estado =0;
+    break;
+//---------- recebe CRC ALTO
+    case 44:                         
+      crc_alto = dado;          // recebe crc alto
+      estado = 45;
+    break;
+//---------- recebe CRC BAIXO
+    case 45:                         
+      crc_baixo = dado;          // recebe crc baixo
+      estado = 0;                // reset da maquina de estados
+      TEMP16.total = 2*(dht.readTemperature());
+      //resposta modbus p/ slave
+      vetor_resposta_modbus [0] = 0x01;   // endereço
+      vetor_resposta_modbus [1] = 0x03;   // função modbus
+      vetor_resposta_modbus [2] = 0x06;   // endereço alto
+      vetor_resposta_modbus [3] = 0x00;
+      vetor_resposta_modbus [4] = 0x01;
+      vetor_resposta_modbus [5] = TEMP16.parcial.low;
+      vetor_resposta_modbus [6] = TEMP16.parcial.high;
+      vetor_resposta_modbus [7] = TEMP16.parcial.low1;
+      vetor_resposta_modbus [8] = TEMP16.parcial.high1;
+      crc16_calculado = CRC16(vetor_resposta_modbus, 9);          // calcula crc do conteudo da resposta com 6 bytes
+      vetor_resposta_modbus [9] = (crc16_calculado >>8 )& 0xff;   // crc alto
+      vetor_resposta_modbus [10] = (crc16_calculado)& 0xff;        // crc baixo
+
+      Serial.write(vetor_resposta_modbus,11);                      // envia a resposta
+    break;
+
+
+//---------- verifica numero de estados alto
+    case 46:                                // estados parte alta é zero
+      if (dado == 0x00) estado = 47;        // para transmitir um numero em ponto flutuante são necessarios 4 bytes, entao sao necessarios 2 estados, 2 bytes por estado
+      else estado =0;
+    break;
+//---------- verifica numero de estados baixa
+    case 47:                         
+      if (dado == 0x03) estado = 48;        // 1 estados para transmitir 4 bytes
+      else estado =0;
+    break;
+//---------- recebe CRC ALTO
+    case 48:                         
+      crc_alto = dado;          // recebe crc alto
+      estado = 49;
+    break;
+//---------- recebe CRC BAIXO
+    case 49:                         
+      crc_baixo = dado;          // recebe crc baixo
+      estado = 0;                // reset da maquina de estados
+      UMI16.total = 2*(dht.readHumidity());
+      //resposta modbus p/ slave
+      vetor_resposta_modbus [0] = 0x01;   // endereço
+      vetor_resposta_modbus [1] = 0x03;   // função modbus
+      vetor_resposta_modbus [2] = 0x06;   // endereço alto
+      vetor_resposta_modbus [3] = 0x00;
+      vetor_resposta_modbus [4] = 0x02;
+      vetor_resposta_modbus [5] = UMI16.parcial.low;
+      vetor_resposta_modbus [6] = UMI16.parcial.high;
+      vetor_resposta_modbus [7] = UMI16.parcial.low1;
+      vetor_resposta_modbus [8] = UMI16.parcial.high1;
+      crc16_calculado = CRC16(vetor_resposta_modbus, 9);          // calcula crc do conteudo da resposta com 6 bytes
+      vetor_resposta_modbus [9] = (crc16_calculado >>8 )& 0xff;   // crc alto
+      vetor_resposta_modbus [10] = (crc16_calculado)& 0xff;        // crc baixo
+
+      Serial.write(vetor_resposta_modbus,11);                      // envia a resposta
+    break;
 
     
   } 
@@ -444,8 +550,8 @@ void setup() {
   pinMode (CH3, INPUT);
   pinMode (CH4, INPUT);
 //--------------------------------------------------------  INIT temp+umi com valor
-  TEMP16.total = 25.27;
-  UMI16.total = 67.37;
+//  TEMP16.total = 25.27;
+//  UMI16.total = 67.37;
 
 }
 
@@ -456,6 +562,9 @@ void loop() {
   uint8_t dadoRX;
   int res_chaves = 0;
   char msg_ch [20];
+
+//  LEITURA_DHT11();
+//  delay(250);
 
 
   if (Serial.available() > 0) {
