@@ -1,12 +1,7 @@
-
-
-
 //------------------------------------------------------------------------------------------ BIBLIOTECAS
 #include <LiquidCrystal.h>
 #include <DHT.h>
 #include <SHT1X.h>
-
-
 //------------------------------------------------------------------------------------------ PINOS e INICIALIZAÇÕES
 //--------------------------------------------------------  DEFS DISPLAY
 #define rs 12
@@ -36,7 +31,8 @@ DHT dht(DHTPIN, DHTTYPE);
 
 
 //------------------------------------------------------------------------------------------ UNION 32 bits em 4 dados de 8 bits
-typedef union{                    // union serve para separar um dado de 32bits em 4 dados de 8 bits, ajuda na transmissao de float
+typedef union{
+  // union serve para separar um dado de 32bits em 4 dados de 8 bits, ajuda na transmissao de float                    
   struct{
     unsigned char high;
     unsigned char low;
@@ -45,8 +41,8 @@ typedef union{                    // union serve para separar um dado de 32bits 
   }parcial;
 float total;
 }INTEIRO;
-INTEIRO dado16, TEMP16, UMI16;   // dado16 é variavel union com os dados, dado16.total é o float inteiro, dado16.parcial é as partes
-
+// dado16 é variavel union com os dados, dado16.total é o float inteiro, dado16.parcial é as partes
+INTEIRO dado16, TEMP16, UMI16;   
 
 //--------------------------------------------------- LEITURA DHT11
 void LEITURA_DHT11(void){
@@ -60,12 +56,10 @@ void LEITURA_DHT11(void){
   Serial.println("%");
 }
 
-
-
-
 //------------------------------------------------------------------------------------------ CALCULO CRC
 //--------------------------------------------------------  TABELAS CRC
-static unsigned char auchCRCHi[] = {        /* Table of CRC values for high–order byte */
+static unsigned char auchCRCHi[] = {     
+   /* Table of CRC values for high–order byte */
 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81,
 0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0,
 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01,
@@ -86,7 +80,8 @@ static unsigned char auchCRCHi[] = {        /* Table of CRC values for high–or
 0x40
 } ;
 
-static char auchCRCLo[] = {                                 /* Table of CRC values for low–order byte */
+static char auchCRCLo[] = { 
+   /* Table of CRC values for low–order byte */                             
 0x00, 0xC0, 0xC1, 0x01, 0xC3, 0x03, 0x02, 0xC2, 0xC6, 0x06, 0x07, 0xC7, 0x05, 0xC5, 0xC4,
 0x04, 0xCC, 0x0C, 0x0D, 0xCD, 0x0F, 0xCF, 0xCE, 0x0E, 0x0A, 0xCA, 0xCB, 0x0B, 0xC9, 0x09,
 0x08, 0xC8, 0xD8, 0x18, 0x19, 0xD9, 0x1B, 0xDB, 0xDA, 0x1A, 0x1E, 0xDE, 0xDF, 0x1F, 0xDD,
@@ -108,7 +103,8 @@ static char auchCRCLo[] = {                                 /* Table of CRC valu
 };
 
 //--------------------------------------------------------  FUNÇÃO QUE CALCULA CRC
-unsigned short CRC16 (unsigned char *puchMsg, unsigned short usDataLen){        /* The function returns the CRC as a unsigned short type */
+unsigned short CRC16 (unsigned char *puchMsg, unsigned short usDataLen){  
+  /* The function returns the CRC as a unsigned short type */      
   unsigned char uchCRCHi = 0xFF ;                     /* high byte of CRC initialized */
   unsigned char uchCRCLo = 0xFF ;                     /* low byte of CRC initialized */
   unsigned uIndex ;                                   /* will index into CRC lookup table */
@@ -121,7 +117,6 @@ unsigned short CRC16 (unsigned char *puchMsg, unsigned short usDataLen){        
   return (uchCRCLo << 8 | uchCRCHi);
 }
 
-
 //------------------------------------------------------------------------------------------ FUNÇÃO ACIONA LEDS
 void ACIONA_LEDS (uint8_t comando_LEDS){
   if (comando_LEDS & (1<<0)) digitalWrite(LED1, HIGH);
@@ -133,8 +128,6 @@ void ACIONA_LEDS (uint8_t comando_LEDS){
   if (comando_LEDS & (1<<3)) digitalWrite(LED4, HIGH);
   else digitalWrite(LED4, LOW);
 }
-
-
 
 //------------------------------------------------------------------------------------------ FUNÇÃO MODBUS
 void modbus(uint8_t dado){
@@ -532,7 +525,6 @@ void modbus(uint8_t dado){
   } 
 }
 
-
 //------------------------------------------------------------------------------------------ SETUP
 void setup() {
 //--------------------------------------------------------  LCD INIT
@@ -554,8 +546,6 @@ void setup() {
 //  UMI16.total = 67.37;
 
 }
-
-
 
 //------------------------------------------------------------------------------------------ LOOP
 void loop() {
