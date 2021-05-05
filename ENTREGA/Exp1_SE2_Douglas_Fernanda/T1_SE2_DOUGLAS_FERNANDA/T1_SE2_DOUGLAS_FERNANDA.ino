@@ -1,9 +1,12 @@
-#include <Arduino.h>
-#line 1 "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\T1-ARDUINO-DOUGLAS\\T1-ARDUINO-DOUGLAS.ino"
+
+
+
 //------------------------------------------------------------------------------------------ BIBLIOTECAS
 #include <LiquidCrystal.h>
 #include <DHT.h>
-#include <SHT1X.h>
+//#include <SHT1x.h>
+
+
 //------------------------------------------------------------------------------------------ PINOS e INICIALIZAÇÕES
 //--------------------------------------------------------  DEFS DISPLAY
 #define rs 12
@@ -33,8 +36,7 @@ DHT dht(DHTPIN, DHTTYPE);
 
 
 //------------------------------------------------------------------------------------------ UNION 32 bits em 4 dados de 8 bits
-typedef union{
-  // union serve para separar um dado de 32bits em 4 dados de 8 bits, ajuda na transmissao de float                    
+typedef union{                    // union serve para separar um dado de 32bits em 4 dados de 8 bits, ajuda na transmissao de float
   struct{
     unsigned char high;
     unsigned char low;
@@ -43,23 +45,10 @@ typedef union{
   }parcial;
 float total;
 }INTEIRO;
-// dado16 é variavel union com os dados, dado16.total é o float inteiro, dado16.parcial é as partes
-INTEIRO dado16, TEMP16, UMI16;   
+INTEIRO dado16, TEMP16, UMI16;   // dado16 é variavel union com os dados, dado16.total é o float inteiro, dado16.parcial é as partes
+
 
 //--------------------------------------------------- LEITURA DHT11
-#line 48 "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\T1-ARDUINO-DOUGLAS\\T1-ARDUINO-DOUGLAS.ino"
-void LEITURA_DHT11(void);
-#line 106 "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\T1-ARDUINO-DOUGLAS\\T1-ARDUINO-DOUGLAS.ino"
-unsigned short CRC16(unsigned char *puchMsg, unsigned short usDataLen);
-#line 121 "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\T1-ARDUINO-DOUGLAS\\T1-ARDUINO-DOUGLAS.ino"
-void ACIONA_LEDS(uint8_t comando_LEDS);
-#line 133 "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\T1-ARDUINO-DOUGLAS\\T1-ARDUINO-DOUGLAS.ino"
-void modbus(uint8_t dado);
-#line 529 "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\T1-ARDUINO-DOUGLAS\\T1-ARDUINO-DOUGLAS.ino"
-void setup();
-#line 551 "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\T1-ARDUINO-DOUGLAS\\T1-ARDUINO-DOUGLAS.ino"
-void loop();
-#line 48 "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\T1-ARDUINO-DOUGLAS\\T1-ARDUINO-DOUGLAS.ino"
 void LEITURA_DHT11(void){
   TEMP16.total = dht.readTemperature();
   UMI16.total = dht.readHumidity();
@@ -71,10 +60,10 @@ void LEITURA_DHT11(void){
   Serial.println("%");
 }
 
+
 //------------------------------------------------------------------------------------------ CALCULO CRC
 //--------------------------------------------------------  TABELAS CRC
-static unsigned char auchCRCHi[] = {     
-   /* Table of CRC values for high–order byte */
+static unsigned char auchCRCHi[] = {        /* Table of CRC values for high–order byte */
 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81,
 0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0,
 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01,
@@ -95,8 +84,7 @@ static unsigned char auchCRCHi[] = {
 0x40
 } ;
 
-static char auchCRCLo[] = { 
-   /* Table of CRC values for low–order byte */                             
+static char auchCRCLo[] = {                                 /* Table of CRC values for low–order byte */
 0x00, 0xC0, 0xC1, 0x01, 0xC3, 0x03, 0x02, 0xC2, 0xC6, 0x06, 0x07, 0xC7, 0x05, 0xC5, 0xC4,
 0x04, 0xCC, 0x0C, 0x0D, 0xCD, 0x0F, 0xCF, 0xCE, 0x0E, 0x0A, 0xCA, 0xCB, 0x0B, 0xC9, 0x09,
 0x08, 0xC8, 0xD8, 0x18, 0x19, 0xD9, 0x1B, 0xDB, 0xDA, 0x1A, 0x1E, 0xDE, 0xDF, 0x1F, 0xDD,
@@ -118,8 +106,7 @@ static char auchCRCLo[] = {
 };
 
 //--------------------------------------------------------  FUNÇÃO QUE CALCULA CRC
-unsigned short CRC16 (unsigned char *puchMsg, unsigned short usDataLen){  
-  /* The function returns the CRC as a unsigned short type */      
+unsigned short CRC16 (unsigned char *puchMsg, unsigned short usDataLen){        /* The function returns the CRC as a unsigned short type */
   unsigned char uchCRCHi = 0xFF ;                     /* high byte of CRC initialized */
   unsigned char uchCRCLo = 0xFF ;                     /* low byte of CRC initialized */
   unsigned uIndex ;                                   /* will index into CRC lookup table */
@@ -369,12 +356,12 @@ void modbus(uint8_t dado){
     break;
 //---------- verifica numero de estados baixa
     case 28:                         
-      if (dado == 0x08) estado = 29;        // 2 estados para transmitir 4 bytes
+      if (dado == 0x10) estado = 29;        // 2 estados para transmitir 4 bytes
       else estado =0;
     break;
 //---------- numero de bytes
     case 29:                         
-      if (dado == 0x10) estado = 30;        // numero de bytes a ser recebido - neste caso 4 bytes
+      if (dado == 0x20) estado = 30;        // numero de bytes a ser recebido - neste caso 4 bytes
       else estado =0;
     break;
 //---------- recebe segundo byte de dados
@@ -410,11 +397,53 @@ void modbus(uint8_t dado){
 //---------- recebe terceiro byte de dados
     case 36:                         
       msg_recebida[6] = (dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      estado = 50;
+    break;
+    
+//---------- recebe segundo byte de dados
+    case 50:                         
+      msg_recebida[7] = (dado);          // recebe segundo dado 4 bytes e salva no parcial low
+      estado = 51;
+    break;
+//---------- recebe terceiro byte de dados
+    case 51:                         
+      msg_recebida[8] = dado;              // recebe terceiro dado 4 bytes e salva no parcial low
+      estado = 52;
+    break;
+//---------- recebe terceiro byte de dados
+    case 52:                         
+      msg_recebida[9] =( dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      estado = 53;
+    break;
+//---------- recebe terceiro byte de dados
+    case 53:                         
+      msg_recebida[10] =( dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      estado = 54;
+    break;
+//---------- recebe terceiro byte de dados
+    case 54:                         
+      msg_recebida[11] =  (dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      estado = 55;
+    break;
+//---------- recebe terceiro byte de dados
+    case 55:                         
+      msg_recebida[12] =( dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      estado = 56;
+    break;
+//---------- recebe terceiro byte de dados
+    case 56:                         
+      msg_recebida[13] = (dado);              // recebe terceiro dado 4 bytes e salva no parcial low
+      estado = 57;
+    break;
+    
+//---------- recebe terceiro byte de dados
+    case 57:                         
+      msg_recebida[14] = (dado);              // recebe terceiro dado 4 bytes e salva no parcial low
       estado = 37;
     break;
 //---------- recebe terceiro byte de dados
     case 37:                         
-      msg_recebida[7] = dado;              // recebe terceiro dado 4 bytes e salva no parcial low
+      msg_recebida[15] = dado;              // recebe terceiro dado 4 bytes e salva no parcial low
       lcd.setCursor(0,0);
       lcd.print(msg_recebida);
 //      lcd.print(msg_recebida[1]);
@@ -441,7 +470,7 @@ void modbus(uint8_t dado){
       vetor_resposta_modbus [2] = 0x00;   // endereço alto
       vetor_resposta_modbus [3] = 0x00;   // endereço baixo
       vetor_resposta_modbus [4] = 0x00;   // numero de estados alto
-      vetor_resposta_modbus [5] = 0x0F;   // numero de estados baixo
+      vetor_resposta_modbus [5] = 0x10;   // numero de estados baixo
       crc16_calculado = CRC16(vetor_resposta_modbus, 6);          // calcula crc do conteudo da resposta com 6 bytes
       vetor_resposta_modbus [6] = (crc16_calculado >>8 )& 0xff;   // crc alto
       vetor_resposta_modbus [7] = (crc16_calculado)& 0xff;        // crc baixo
@@ -544,7 +573,7 @@ void modbus(uint8_t dado){
 void setup() {
 //--------------------------------------------------------  LCD INIT
   lcd.begin(16, 2);
-  lcd.print("teste");
+  //lcd.print("teste");
 //--------------------------------------------------------  SERIAL INIT
   Serial.begin(9600);
 //--------------------------------------------------------  I/O's INIT
@@ -562,6 +591,7 @@ void setup() {
 
 }
 
+
 //------------------------------------------------------------------------------------------ LOOP
 void loop() {
   uint8_t dadoRX;
@@ -577,4 +607,3 @@ void loop() {
     modbus(dadoRX);
   }
 }
-

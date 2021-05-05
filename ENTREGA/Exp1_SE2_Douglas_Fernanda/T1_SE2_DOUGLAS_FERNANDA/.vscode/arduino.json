@@ -1,0 +1,7 @@
+{
+    "sketch": "T1_SE2_DOUGLAS_FERNANDA.ino",
+    "port": "COM10",
+    "board": "arduino:avr:uno",
+    "programmer": "arduino:avrisp",
+    "output": ".\\bin"
+}

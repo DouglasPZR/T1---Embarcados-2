@@ -1,0 +1,14 @@
+ --------------------   liga 4 leds
+função = 0x0F
+start adress = 02 HEX
+Nº of coils = 4 
+
+ --------------------   ler chaves
+função = 0x02
+start adress = 03 HEX
+Nº of coils = 4 
+
+ --------------------   ler chaves
+função = 0x02
+start adress = 03 HEX
+Nº of coils = 4 
