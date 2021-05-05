@@ -59,9 +59,9 @@ unsigned short CRC16(unsigned char *puchMsg, unsigned short usDataLen);
 void ACIONA_LEDS(uint8_t comando_LEDS);
 #line 135 "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\ENTREGA\\Exp1_SE2_Douglas_Fernanda\\T1_SE2_DOUGLAS_FERNANDA\\T1_SE2_DOUGLAS_FERNANDA.ino"
 void modbus(uint8_t dado);
-#line 573 "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\ENTREGA\\Exp1_SE2_Douglas_Fernanda\\T1_SE2_DOUGLAS_FERNANDA\\T1_SE2_DOUGLAS_FERNANDA.ino"
+#line 575 "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\ENTREGA\\Exp1_SE2_Douglas_Fernanda\\T1_SE2_DOUGLAS_FERNANDA\\T1_SE2_DOUGLAS_FERNANDA.ino"
 void setup();
-#line 596 "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\ENTREGA\\Exp1_SE2_Douglas_Fernanda\\T1_SE2_DOUGLAS_FERNANDA\\T1_SE2_DOUGLAS_FERNANDA.ino"
+#line 598 "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\ENTREGA\\Exp1_SE2_Douglas_Fernanda\\T1_SE2_DOUGLAS_FERNANDA\\T1_SE2_DOUGLAS_FERNANDA.ino"
 void loop();
 #line 52 "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\ENTREGA\\Exp1_SE2_Douglas_Fernanda\\T1_SE2_DOUGLAS_FERNANDA\\T1_SE2_DOUGLAS_FERNANDA.ino"
 void LEITURA_DHT11(void){
@@ -223,7 +223,7 @@ void modbus(uint8_t dado){
       dado16.parcial.high1 = dado;          // recebe quarto dado 4 bytes e salva no parcial low
 
       lcd.setCursor(0,2);
-      lcd.print("N= ");
+      lcd.print("No flaot = ");
       lcd.print(dado16.total);
       
       estado = 11;
@@ -459,6 +459,8 @@ void modbus(uint8_t dado){
 //---------- recebe terceiro byte de dados
     case 37:                         
       msg_recebida[15] = dado;              // recebe terceiro dado 4 bytes e salva no parcial low
+      lcd.setCursor(0,0);
+      lcd.print("                ");
       lcd.setCursor(0,0);
       lcd.print(msg_recebida);
 //      lcd.print(msg_recebida[1]);
