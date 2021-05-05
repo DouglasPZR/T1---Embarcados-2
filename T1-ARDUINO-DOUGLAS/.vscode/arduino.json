@@ -1,0 +1,7 @@
+{
+    "sketch": "T1-ARDUINO-DOUGLAS.ino",
+    "board": "arduino:avr:uno",
+    "port": "COM7",
+    "programmer": "arduino:avrisp",
+    "output": ".\\bin"
+}

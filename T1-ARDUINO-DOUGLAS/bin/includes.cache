@@ -1,0 +1,62 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "D:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\cores\\arduino"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "D:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\variants\\standard"
+  },
+  {
+    "Sourcefile": "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\T1-ARDUINO-DOUGLAS\\bin\\sketch\\T1-ARDUINO-DOUGLAS.ino.cpp",
+    "Include": "LiquidCrystal.h",
+    "Includepath": "D:\\Program Files (x86)\\Arduino\\libraries\\LiquidCrystal\\src"
+  },
+  {
+    "Sourcefile": "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\T1-ARDUINO-DOUGLAS\\bin\\sketch\\T1-ARDUINO-DOUGLAS.ino.cpp",
+    "Include": "DHT.h",
+    "Includepath": "C:\\Users\\dougl\\Documents\\Arduino\\libraries\\DHT_sensor_library"
+  },
+  {
+    "Sourcefile": "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\T1-ARDUINO-DOUGLAS\\bin\\sketch\\T1-ARDUINO-DOUGLAS.ino.cpp",
+    "Include": "SHT1X.h",
+    "Includepath": "D:\\Program Files (x86)\\Arduino\\libraries\\Arduino\\src"
+  },
+  {
+    "Sourcefile": "c:\\Users\\dougl\\Google Drive\\Faculdade\\GitHub\\Embarcados II\\Trabalho 1 - Douglas P Rodrigues\\T1---Embarcados-2\\T1-ARDUINO-DOUGLAS\\bin\\sketch\\T1-ARDUINO-DOUGLAS.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\Program Files (x86)\\Arduino\\libraries\\LiquidCrystal\\src\\LiquidCrystal.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\dougl\\Documents\\Arduino\\libraries\\DHT_sensor_library\\DHT.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\dougl\\Documents\\Arduino\\libraries\\DHT_sensor_library\\DHT_U.cpp",
+    "Include": "Adafruit_Sensor.h",
+    "Includepath": "C:\\Users\\dougl\\Documents\\Arduino\\libraries\\Adafruit_Unified_Sensor"
+  },
+  {
+    "Sourcefile": "C:\\Users\\dougl\\Documents\\Arduino\\libraries\\DHT_sensor_library\\DHT_U.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\Program Files (x86)\\Arduino\\libraries\\Arduino\\src\\SHT1X.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\dougl\\Documents\\Arduino\\libraries\\Adafruit_Unified_Sensor\\Adafruit_Sensor.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]
